@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# 脚本更新日期 2026.04.23
+# Script update date 2026.04.23
 set -e
 
 WORK_DIR=/sing-box
 PORT=$START_PORT
 SUBSCRIBE_TEMPLATE="https://raw.githubusercontent.com/fscarmen/client_template/main"
 
-# 自定义字体彩色，read 函数
-warning() { echo -e "\033[31m\033[01m$*\033[0m"; }  # 红色
-info() { echo -e "\033[32m\033[01m$*\033[0m"; }   # 绿色
-hint() { echo -e "\033[33m\033[01m$*\033[0m"; }   # 黄色
+# Custom font color, read function
+warning() { echo -e "\033[31m\033[01m$*\033[0m"; }  # red
+info() { echo -e "\033[32m\033[01m$*\033[0m"; } # Green
+hint() { echo -e "\033[33m\033[01m$*\033[0m"; } # Yellow
 
-# 判断系统架构，以下载相应的应用
+# Determine the system architecture to download the corresponding application
 case "$ARCH" in
   arm64 )
     SING_BOX_ARCH=arm64-musl; JQ_ARCH=arm64; QRENCODE_ARCH=arm64; ARGO_ARCH=arm64
@@ -24,50 +24,50 @@ case "$ARCH" in
     ;;
 esac
 
-# 检查 sing-box 最新版本
+# Check the latest version of sing-box
 check_latest_sing-box() {
-  # 检查是否强制指定版本
-  local FORCE_VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO- https://raw.githubusercontent.com/fscarmen/sing-box/refs/heads/main/force_version | sed 's/^[vV]//g')
+  # Check whether the specified version is mandatory
+  local FORCE_VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO-https://raw.githubusercontent.com/fscarmen/sing-box/refs/heads/main/force_version | sed 's/^[vV]//g')
 
-  # 没有强制指定版本时，获取最新版本
-  grep -q '.' <<< "$FORCE_VERSION" || local FORCE_VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO- https://api.github.com/repos/SagerNet/sing-box/releases | awk -F '["v-]' '/tag_name/{print $5}' | sort -Vr | sed -n '1p')
+  # When there is no forced version specification, get the latest version
+grep -q '.' <<< "$FORCE_VERSION" || local FORCE_VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO-https://api.github.com/repos/SagerNet/sing-box/releases | awk -F '["v-]' '/tag_name/{print $5}' | sort -Vr | sed -n '1p')
 
-  # 获取最终版本号
-  local VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO- https://api.github.com/repos/SagerNet/sing-box/releases | awk -F '["v]' -v var="tag_name.*$FORCE_VERSION" '$0 ~ var {print $5; exit}')
+  # Get the final version number
+  local VERSION=$(wget --no-check-certificate --tries=2 --timeout=3 -qO-https://api.github.com/repos/SagerNet/sing-box/releases | awk -F '["v]' -v var="tag_name.*$FORCE_VERSION" '$0 ~ var {print $5; exit}')
   VERSION=${VERSION:-'1.13.0-rc.4'}
 
   echo "$VERSION"
 }
 
-# 安装 sing-box 容器
+# Install sing-box container
 install() {
-  # 下载 sing-box
-  echo "正在下载 sing-box ..."
+  # Download sing-box
+  echo "Downloading sing-box..."
   local ONLINE=$(check_latest_sing-box)
-  wget https://github.com/SagerNet/sing-box/releases/download/v$ONLINE/sing-box-$ONLINE-linux-$SING_BOX_ARCH.tar.gz -O- | tar xz -C ${WORK_DIR} sing-box-$ONLINE-linux-$SING_BOX_ARCH/sing-box && mv ${WORK_DIR}/sing-box-$ONLINE-linux-$SING_BOX_ARCH/sing-box ${WORK_DIR}/sing-box && rm -rf ${WORK_DIR}/sing-box-$ONLINE-linux-$SING_BOX_ARCH
+  wget https://github.com/SagerNet/sing-box/releases/download/v$ONLINE/sing-box-$ONLINE-linux-$SING_BOX_ARCH.tar.gz -O-| tar xz -C ${WORK_DIR} sing-box-$ONLINE-linux-$SING_BOX_ARCH/sing-box && mv ${WORK_DIR}/sing-box-$ONLINE-linux-$SING_BOX_ARCH/sing-box ${WORK_DIR}/sing-box && rm -rf ${WORK_DIR}/sing-box-$ONLINE-linux-$SING_BOX_ARCH
 
-  # 下载 jq
-  echo "正在下载 jq ..."
-  wget -O ${WORK_DIR}/jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$JQ_ARCH && chmod +x ${WORK_DIR}/jq
+  # download jq
+  echo "Downloading jq..."
+wget -O ${WORK_DIR}/jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$JQ_ARCH && chmod +x ${WORK_DIR}/jq
 
-  # 下载 qrencode
-  echo "正在下载 qrencode ..."
+  # Download qrencode
+  echo "Downloading qrencode..."
   wget -O ${WORK_DIR}/qrencode https://github.com/fscarmen/client_template/raw/main/qrencode-go/qrencode-go-linux-$QRENCODE_ARCH && chmod +x ${WORK_DIR}/qrencode
 
-  # 下载 cloudflared
-  echo "正在下载 cloudflared ..."
-  wget -O ${WORK_DIR}/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$ARGO_ARCH && chmod +x ${WORK_DIR}/cloudflared
+  # download cloudflared
+  echo "Downloading cloudflared..."
+wget -O ${WORK_DIR}/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$ARGO_ARCH && chmod +x ${WORK_DIR}/cloudflared
 
-  # 生成100年的自签证书，区分使用 IPv4 / IPv6 / 域名
-  echo "生成自签证书 ..."
+  # Generate a 100-year self-signed certificate, using IPv4 /IPv6 /domain name separately
+  echo "Generate self-signed certificate..."
   openssl ecparam -genkey -name prime256v1 -out ${WORK_DIR}/cert/private.key
   openssl req -new -x509 -days 36500 -key ${WORK_DIR}/cert/private.key -out ${WORK_DIR}/cert/cert.pem -subj "/CN=mozilla.org" -addext "subjectAltName = DNS:addons.mozilla.org"
 
-  # 检查系统是否已经安装 tcp-brutal
+ # Check whether the system has installed tcp-brutal
   IS_BRUTAL=false && [ -x "$(type -p lsmod)" ] && lsmod 2>/dev/null | grep -q 'brutal' && IS_BRUTAL=true
   [ "$IS_BRUTAL" = 'false' ] && [ -x "$(type -p modprobe)" ] && modprobe brutal 2>/dev/null && IS_BRUTAL=true
 
-  # 生成 sing-box 配置文件
+  # Generate sing-box configuration file
   for i in {1..3}; do
     ping -c 1 -W 1 "151.101.1.91" &>/dev/null && local IS_IPV4=is_ipv4 && break
   done
@@ -138,25 +138,23 @@ install() {
   local NODE_NAME=${NODE_NAME:-"sing-box"}
   local CDN=${CDN:-"skk.moe"}
 
-  # 检测是否解锁 chatGPT，首先检查API访问
-  local CHECK_RESULT1=$(wget --timeout=2 --tries=2 --retry-connrefused --waitretry=5 -qO- --content-on-error --header='authority: api.openai.com' --header='accept: */*' --header='accept-language: en-US,en;q=0.9' --header='authorization: Bearer null' --header='content-type: application/json' --header='origin: https://platform.openai.com' --header='referer: https://platform.openai.com/' --header='sec-ch-ua: "Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"' --header='sec-ch-ua-mobile: ?0' --header='sec-ch-ua-platform: "Windows"' --header='sec-fetch-dest: empty' --header='sec-fetch-mode: cors' --header='sec-fetch-site: same-site' --user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' 'https://api.openai.com/compliance/cookie_requirements')
-
-  # 如果API检测失败或者检测到unsupported_country,直接返回ban
+  # Check whether chatGPT is unlocked, first check API access
+local CHECK_RESULT1=$(wget --timeout=2 --tries=2 --retry-connrefused --waitretry=5 -qO---content-on-error --header='authority: api.openai.com' --header='accept: */*' --header='accept-language: en-US,en;q=0.9' --header='authorization: Bearer null' --header='content-type: application/json' --header='origin: https://platform.openai.com' --header='referer: https://platform.openai.com/' --header='sec-ch-ua: "Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"' --header='sec-ch-ua-mobile: ?0' --header='sec-ch-ua-platform: "Windows"' --header='sec-fetch-dest: empty' --header='sec-fetch-mode: cors' --header='sec-fetch-site: same-site' --user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' 'https://api.openai.com/compliance/cookie_requirements')
+# If the API detection fails or unsupported_country is detected, return ban directly.
   if [ -z "$CHECK_RESULT1" ] || grep -qi 'unsupported_country' <<< "$CHECK_RESULT1"; then
     CHATGPT_OUT=warp-ep
   fi
 
-  # API检测通过后,继续检查网页访问
-  local CHECK_RESULT2=$(wget --timeout=2 --tries=2 --retry-connrefused --waitretry=5 -qO- --content-on-error --header='authority: ios.chat.openai.com' --header='accept: */*;q=0.8,application/signed-exchange;v=b3;q=0.7' --header='accept-language: en-US,en;q=0.9' --header='sec-ch-ua: "Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"' --header='sec-ch-ua-mobile: ?0' --header='sec-ch-ua-platform: "Windows"' --header='sec-fetch-dest: document' --header='sec-fetch-mode: navigate' --header='sec-fetch-site: none' --header='sec-fetch-user: ?1' --header='upgrade-insecure-requests: 1' --user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' https://ios.chat.openai.com/)
-
-  # 检查第二个结果
+  # After the API detection passes, continue to check web page access
+local CHECK_RESULT2=$(wget --timeout=2 --tries=2 --retry-connrefused --waitretry=5 -qO---content-on-error --header='authority: ios.chat.openai.com' --header='accept: */*;q=0.8,application/signed-exchange;v=b3;q=0.7' --header='accept-language: en-US,en;q=0.9' --header='sec-ch-ua: "Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"' --header='sec-ch-ua-mobile: ?0' --header='sec-ch-ua-platform: "Windows"' --header='sec-fetch-dest: document' --header='sec-fetch-mode: navigate' --header='sec-fetch-site: none' --header='sec-fetch-user: ?1' --header='upgrade-insecure-requests: 1' --user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' https://ios.chat.openai.com/)
+# Check the second result
   if [ -z "$CHECK_RESULT2" ] || grep -qi 'VPN' <<< "$CHECK_RESULT2"; then
     CHATGPT_OUT=warp-ep
   else
     CHATGPT_OUT=direct
   fi
 
-  # 生成 log 配置
+  # Generate log configuration
   cat > ${WORK_DIR}/conf/00_log.json << EOF
 {
     "log":{
@@ -168,7 +166,7 @@ install() {
 }
 EOF
 
-  # 生成 outbound 配置
+# Generate outbound configuration
   cat > ${WORK_DIR}/conf/01_outbounds.json << EOF
 {
     "outbounds":[
@@ -180,7 +178,7 @@ EOF
 }
 EOF
 
-  # 生成 endpoint 配置
+  # Generate endpoint configuration
   cat > ${WORK_DIR}/conf/02_endpoints.json << EOF
 {
     "endpoints":[
@@ -214,7 +212,7 @@ EOF
 }
 EOF
 
-  # 生成 route 配置
+  # Generate route configuration
   cat > ${WORK_DIR}/conf/03_route.json << EOF
 {
     "route":{
@@ -258,7 +256,7 @@ EOF
 }
 EOF
 
-  # 生成缓存文件
+# Generate cache file
   cat > ${WORK_DIR}/conf/04_experimental.json << EOF
 {
     "experimental": {
@@ -270,7 +268,7 @@ EOF
 }
 EOF
 
-  # 生成 dns 配置文件
+  # Generate dns configuration file
   cat > ${WORK_DIR}/conf/05_dns.json << EOF
 {
     "dns":{
@@ -284,7 +282,7 @@ EOF
 }
 EOF
 
-  # 内建的 NTP 客户端服务配置文件，这对于无法进行时间同步的环境很有用
+  # Built-in NTP client service configuration file, which is useful for environments where time synchronization is not possible
   cat > ${WORK_DIR}/conf/06_ntp.json << EOF
 {
     "ntp": {
@@ -296,7 +294,7 @@ EOF
 }
 EOF
 
-  # 生成 XTLS + Reality 配置
+  # Generate XTLS + Reality configuration
   [ "${XTLS_REALITY}" = 'true' ] && ((PORT++)) && PORT_XTLS_REALITY=$PORT && cat > ${WORK_DIR}/conf/11_xtls-reality_inbounds.json << EOF
 //  "public_key":"${REALITY_PUBLIC}"
 {
@@ -341,7 +339,7 @@ EOF
 }
 EOF
 
-  # 生成 Hysteria2 配置
+ # Generate Hysteria2 configuration
   [ "${HYSTERIA2}" = 'true' ] && ((PORT++)) && PORT_HYSTERIA2=$PORT && cat > ${WORK_DIR}/conf/12_hysteria2_inbounds.json << EOF
 {
     "inbounds":[
@@ -356,7 +354,7 @@ EOF
                 }
             ],
             "ignore_client_bandwidth":false,
-            "tls":{
+"tls":{
                 "enabled":true,
                 "alpn":[
                     "h3"
@@ -371,7 +369,7 @@ EOF
 }
 EOF
 
-  # 生成 Tuic V5 配置
+  #Generate Tuic V5 configuration
   [ "${TUIC}" = 'true' ] && ((PORT++)) && PORT_TUIC=$PORT && cat > ${WORK_DIR}/conf/13_tuic_inbounds.json << EOF
 {
     "inbounds":[
@@ -401,7 +399,7 @@ EOF
 }
 EOF
 
-  # 生成 ShadowTLS V5 配置
+  # Generate ShadowTLS V5 configuration
   [ "${SHADOWTLS}" = 'true' ] && ((PORT++)) && PORT_SHADOWTLS=$PORT && cat > ${WORK_DIR}/conf/14_ShadowTLS_inbounds.json << EOF
 {
     "inbounds":[
@@ -444,7 +442,7 @@ EOF
 }
 EOF
 
-  # 生成 Shadowsocks 配置
+  # Generate Shadowsocks configuration
   [ "${SHADOWSOCKS}" = 'true' ] && ((PORT++)) && PORT_SHADOWSOCKS=$PORT && cat > ${WORK_DIR}/conf/15_shadowsocks_inbounds.json << EOF
 {
     "inbounds":[
@@ -469,7 +467,7 @@ EOF
 }
 EOF
 
-  # 生成 Trojan 配置
+  # Generate Trojan configuration
   [ "${TROJAN}" = 'true' ] && ((PORT++)) && PORT_TROJAN=$PORT && cat > ${WORK_DIR}/conf/16_trojan_inbounds.json << EOF
 {
     "inbounds":[
@@ -502,7 +500,7 @@ EOF
 }
 EOF
 
-  # 生成 vmess + ws 配置
+  # Generate vmess + ws configuration
   [ "${VMESS_WS}" = 'true' ] && ((PORT++)) && PORT_VMESS_WS=$PORT && cat > ${WORK_DIR}/conf/17_vmess-ws_inbounds.json << EOF
 //  "CDN": "${CDN}"
 {
@@ -540,7 +538,7 @@ EOF
 }
 EOF
 
-  # 生成 vless + ws + tls 配置
+  # Generate vless + ws + tls configuration
   [ "${VLESS_WS}" = 'true' ] && ((PORT++)) && PORT_VLESS_WS=$PORT && cat > ${WORK_DIR}/conf/18_vless-ws-tls_inbounds.json << EOF
 //  "CDN": "${CDN}"
 {
@@ -577,8 +575,7 @@ EOF
     ]
 }
 EOF
-
-  # 生成 H2 + Reality 配置
+#Generate H2 + Reality configuration
   [ "${H2_REALITY}" = 'true' ] && ((PORT++)) && PORT_H2_REALITY=$PORT && cat > ${WORK_DIR}/conf/19_h2-reality_inbounds.json << EOF
 //  "public_key":"${REALITY_PUBLIC}"
 {
@@ -625,7 +622,7 @@ EOF
 }
 EOF
 
-  # 生成 gRPC + Reality 配置
+  # Generate gRPC + Reality configuration
   [ "${GRPC_REALITY}" = 'true' ] && ((PORT++)) && PORT_GRPC_REALITY=$PORT && cat > ${WORK_DIR}/conf/20_grpc-reality_inbounds.json << EOF
 //  "public_key":"${REALITY_PUBLIC}"
 {
@@ -673,7 +670,7 @@ EOF
 }
 EOF
 
-  # 生成 AnyTLS 配置
+  # Generate AnyTLS configuration
   [ "${ANYTLS}" = 'true' ] && ((PORT++)) && PORT_ANYTLS=$PORT && cat > ${WORK_DIR}/conf/21_anytls_inbounds.json << EOF
 {
     "inbounds":[
@@ -698,41 +695,40 @@ EOF
 }
 EOF
 
-  # 判断 argo 隧道类型
+# Determine the argo tunnel type
   if [[ -n "$ARGO_DOMAIN" && -n "$ARGO_AUTH" ]]; then
-    # 根据 ARGO_AUTH 的内容，自行判断是 Json， Token 还是 API 申请
+    # Based on the content of ARGO_AUTH, determine whether it is Json, Token or API application.
     if [[ "$ARGO_AUTH" =~ TunnelSecret ]]; then
-      # JSON 类型
+      # JSON type
       local ARGO_JSON=${ARGO_AUTH//[ ]/}
     elif [[ "${ARGO_AUTH}" =~ [A-Z0-9a-z=]{150,250}$ ]]; then
-      # Token 类型
+      # Token type
       local ARGO_TOKEN=$(awk '{print $NF}' <<< "$ARGO_AUTH")
     elif [[ "${#ARGO_AUTH}" == 40 ]]; then
-      # API 类型 (Cloudflare API Token)
-      echo -e "\n使用 Cloudflare API 创建隧道..."
+      # API type (Cloudflare API Token)
+echo -e "\nCreate a tunnel using the Cloudflare API..."
 
-      # 获取隧道名和根域名
+   # Get the tunnel name and root domain name
       local TUNNEL_NAME=${ARGO_DOMAIN%%.*}
       local ROOT_DOMAIN=${ARGO_DOMAIN#*.}
 
-      # 获取 Zone ID 和 Account ID
-      local ZONE_RESPONSE=$(wget --no-check-certificate -qO- --content-on-error \
+      # Get Zone ID and Account ID
+      local ZONE_RESPONSE=$(wget --no-check-certificate -qO---content-on-error \
         --header="Authorization: Bearer ${ARGO_AUTH}" \
         --header="Content-Type: application/json" \
         "https://api.cloudflare.com/client/v4/zones?name=${ROOT_DOMAIN}")
-
-      local ZONE_ID=$(sed 's/.*"result":[ ]*[{"id:[ ]*"\([^"]*\)",.*/\1/' <<< $ZONE_RESPONSE)
+local ZONE_ID=$(sed 's/.*"result":[ ]*[{"id:[ ]*"\([^"]*\)",.*/\1/' <<< $ZONE_RESPONSE)
       local ACCOUNT_ID=$(sed 's/.*account":[ ]*{"id":"\([^"]*\)",.*/\1/' <<< $ZONE_RESPONSE)
 
-      # 查询并处理现有 Tunnel
-      local TUNNEL_LIST=$(wget --no-check-certificate -qO- --content-on-error \
+# Query and process existing tunnels
+      local TUNNEL_LIST=$(wget --no-check-certificate -qO---content-on-error \
         --header="Authorization: Bearer ${ARGO_AUTH}" \
         --header="Content-Type: application/json" \
-        "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel?is_deleted=false" \
-        | awk 'BEGIN{RS="";FS=""}{s=substr($0,index($0,"\"result\":[")+10);d=0;b="";for(i=1;i<=length(s);i++){c=substr(s,i,1);if(c=="{")d++;if(d>0)b=b c;if(c=="}"){d--;if(d==0){print b;b=""}}}}')
+"https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel?is_deleted=false" \
+| awk 'BEGIN{RS="";FS=""}{s=substr($0,index($0,"\"result\":[")+10);d=0;b="";for(i=1;i<=length(s);i++){c=substr(s,i,1);if(c=="{")d++;if(d>0)b=b c;if(c=="}"){d--;if(d==0){print b;b=""}}}}')
 
       if [[ "$TUNNEL_LIST" =~ \"id\":\"([^\"]+).*\"name\":\"$TUNNEL_NAME\" ]]; then
-        # 有同名 Tunnel，则获取其 ID 和 TOKEN
+       # If there is a Tunnel with the same name, get its ID and TOKEN
         local EXISTING_TUNNEL_ID="${BASH_REMATCH[1]}"
         local EXISTING_TUNNEL_TOKEN=$(wget -qO- --content-on-error \
           --header="Authorization: Bearer ${ARGO_AUTH}" \
@@ -742,25 +738,25 @@ EOF
         local TUNNEL_ID=$EXISTING_TUNNEL_ID
         local ARGO_TOKEN=$(sed -n 's/.*"result":"\([^"]\+\)".*/\1/p' <<< "$EXISTING_TUNNEL_TOKEN")
       else
-        # 生成 Tunnel Secret (至少 32 字节的 base64 编码)
+      # Generate Tunnel Secret (at least 32 bytes base64 encoded)
         local TUNNEL_SECRET=$(openssl rand -base64 32)
 
-        # 创建新 Tunnel
-        local CREATE_RESPONSE=$(wget --no-check-certificate -qO- --content-on-error \
+        #Create new Tunnel
+        local CREATE_RESPONSE=$(wget --no-check-certificate -qO---content-on-error \
           --header="Authorization: Bearer ${ARGO_AUTH}" \
           --header="Content-Type: application/json" \
           --post-data="{
             \"name\": \"$TUNNEL_NAME\",
             \"config_src\": \"cloudflare\",
             \"tunnel_secret\": \"$TUNNEL_SECRET\"
-          }" \
+}"\
           "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel")
 
         local TUNNEL_ID=$(sed -n 's/.*"id":"\([^"]\+\)".*/\1/p' <<< "$CREATE_RESPONSE")
         local ARGO_TOKEN=$(sed -n 's/.*"token":"\([^"]\+\)".*/\1/p' <<< "$CREATE_RESPONSE")
       fi
 
-      # 配置隧道ingress规则
+      # Configure tunnel ingress rules
       local CONFIG_RESPONSE=$(wget --no-check-certificate -qO- --content-on-error \
         --method=PUT \
         --header="Authorization: Bearer ${ARGO_AUTH}" \
@@ -783,7 +779,7 @@ EOF
         }" \
         "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/cfd_tunnel/${TUNNEL_ID}/configurations")
 
-      # 管理DNS记录
+      # Manage DNS records
       local DNS_PAYLOAD="{
         \"name\": \"${ARGO_DOMAIN}\",
         \"type\": \"CNAME\",
@@ -799,11 +795,11 @@ EOF
         --header="Content-Type: application/json" \
         "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?type=CNAME&name=${ARGO_DOMAIN}")
 
-      # 如果已存在需要的 DNS 记录，就跳过
+ # If the required DNS record already exists, skip it
       if [[ "$DNS_LIST" =~ \"id\":\"([^\"]+)\".*\"$ARGO_DOMAIN\".*\"content\":\"([^\"]+)\" ]]; then
         local EXISTING_DNS_ID="${BASH_REMATCH[1]}" EXISTED_DNS_CONTENT="${BASH_REMATCH[2]}"
 
-        # DNS 记录与隧道 ID 不匹配的话，覆盖原来的 CNAME 记录
+        # If the DNS record does not match the tunnel ID, overwrite the original CNAME record
         if ! grep -qw "$EXISTING_TUNNEL_ID" <<< "${EXISTED_DNS_CONTENT%%.*}"; then
           local DNS_RESPONSE=$(wget --no-check-certificate -qO- --content-on-error \
             --method=PATCH \
@@ -813,8 +809,8 @@ EOF
             "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${EXISTING_DNS_ID}")
         fi
       else
-        # 未找到现有 DNS 记录，使用 POST 创建
-        local DNS_RESPONSE=$(wget --no-check-certificate -qO- --content-on-error \
+# Existing DNS record not found, created using POST
+        local DNS_RESPONSE=$(wget --no-check-certificate -qO---content-on-error \
           --method=POST \
           --header="Authorization: Bearer ${ARGO_AUTH}" \
           --header="Content-Type: application/json" \
@@ -822,11 +818,11 @@ EOF
           "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records")
       fi
 
-      # 构造ARGO_JSON
-      local ARGO_JSON="{\"AccountTag\":\"$ACCOUNT_ID\",\"TunnelSecret\":\"$TUNNEL_SECRET\",\"TunnelID\":\"$TUNNEL_ID\",\"Endpoint\":\"\"}"
+      # Construct ARGO_JSON
+local ARGO_JSON="{\"AccountTag\":\"$ACCOUNT_ID\",\"TunnelSecret\":\"$TUNNEL_SECRET\",\"TunnelID\":\"$TUNNEL_ID\",\"Endpoint\":\"\"}"
     fi
 
-    # 根据ARGO_JSON或ARGO_TOKEN设置ARGO_RUNS
+    # Set ARGO_RUNS based on ARGO_JSON or ARGO_TOKEN
     if [[ -n "$ARGO_JSON" ]]; then
       local ARGO_RUNS="cloudflared tunnel --edge-ip-version auto --config ${WORK_DIR}/tunnel.yml run"
       echo $ARGO_JSON > ${WORK_DIR}/tunnel.json
@@ -848,7 +844,7 @@ EOF
     local ARGO_RUNS="cloudflared tunnel --edge-ip-version auto --no-autoupdate --no-tls-verify --metrics 0.0.0.0:$METRICS_PORT --url http://localhost:$START_PORT"
   fi
 
-  # 生成 s6-overlay 服务脚本（替代 supervisord）
+# Generate s6-overlay service script (replacing supervisord)
   mkdir -p /etc/services.d/nginx /etc/services.d/sing-box
   cat > /etc/services.d/nginx/run << 'EOF'
 #!/usr/bin/env sh
@@ -860,7 +856,7 @@ exec ${WORK_DIR}/sing-box run -C ${WORK_DIR}/conf/
 EOF
   chmod +x /etc/services.d/nginx/run /etc/services.d/sing-box/run
 
-  # 命名隧道模式时，argo 作为 s6 服务；Quick Tunnel 模式维持原先的前置后台拉起逻辑
+  # When naming tunnel mode, argo serves as s6 service; Quick Tunnel mode maintains the original front-end and background pull-up logic
   if [ -z "$METRICS_PORT" ]; then
     mkdir -p /etc/services.d/argo
     cat > /etc/services.d/argo/run << EOF
@@ -870,19 +866,19 @@ EOF
     chmod +x /etc/services.d/argo/run
 
   else
-    # 如使用临时隧道，先运行 cloudflared 以获取临时隧道域名
+# If using a temporary tunnel, run cloudflared first to obtain the temporary tunnel domain name
     nohup ${WORK_DIR}/${ARGO_RUNS} >/dev/null 2>&1 &
     until grep -q 'trycloudflare\.com' <<< "$ARGO_DOMAIN" ; do
       sleep 1
-      local ARGO_DOMAIN=$(wget -qO- http://localhost:$METRICS_PORT/quicktunnel | awk -F '"' '{print $4}')
+      local ARGO_DOMAIN=$(wget -qO-http://localhost:$METRICS_PORT/quicktunnel | awk -F '"' '{print $4}')
     done
   fi
 
-  # 获取自签证书指纹。argo 回源的是由 Google Trust Services（谷歌信任服务）作为中间 CA（CN=WE1）签发，受信任的证书（非自签名）
-  local SELF_SIGNED_FINGERPRINT_SHA256=$(openssl x509 -fingerprint -noout -sha256 -in ${WORK_DIR}/cert/cert.pem | awk -F '=' '{print $NF}')
+  # Get the fingerprint of the self-signed certificate. The origin returned by argo is a trusted certificate (not self-signed) issued by Google Trust Services as an intermediate CA (CN=WE1)
+local SELF_SIGNED_FINGERPRINT_SHA256=$(openssl x509 -fingerprint -noout -sha256 -in ${WORK_DIR}/cert/cert.pem | awk -F '=' '{print $NF}')
   local SELF_SIGNED_FINGERPRINT_BASE64=$(openssl x509 -in ${WORK_DIR}/cert/cert.pem -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64)
 
-  # 生成 nginx 配置文件
+ # Generate nginx configuration file
   local NGINX_CONF="user root;
 
   worker_processes auto;
@@ -895,13 +891,13 @@ EOF
   }
 
   http {
-    map \$http_user_agent \$path {
-      default                    /;                # 默认路径
-      ~*v2rayN|Neko|Throne       /base64;          # 匹配 V2rayN / NekoBox / Throne 客户端
-      ~*clash                    /clash;           # 匹配 Clash 客户端
-      ~*ShadowRocket             /shadowrocket;    # 匹配 ShadowRocket 客户端
-      ~*SFM|SFI|SFA              /sing-box;        # 匹配 Sing-box 官方客户端
-   #   ~*Chrome|Firefox|Mozilla  /;                # 添加更多的分流规则
+ map \$http_user_agent \$path {
+      default /; #Default path
+      ~*v2rayN|Neko|Throne /base64; # Match V2rayN /NekoBox /Throne client
+      ~*clash /clash; # Match Clash client
+      ~*ShadowRocket /shadowrocket; # Match ShadowRocket client
+      ~*SFM|SFI|SFA /sing-box; # Match Sing-box official client
+   # ~*Chrome|Firefox|Mozilla /; # Add more diversion rules
     }
 
       include       /etc/nginx/mime.types;
@@ -928,7 +924,7 @@ EOF
 "
 
   [ "${VLESS_WS}" = 'true' ] && NGINX_CONF+="
-      # 反代 sing-box vless websocket
+      # Anti-generational sing-box vless websocket
       location /${UUID}-vless {
         if (\$http_upgrade != "websocket") {
            return 404;
@@ -944,7 +940,7 @@ EOF
       }"
 
   [ "${VMESS_WS}" = 'true' ] && NGINX_CONF+="
-      # 反代 sing-box websocket
+      # anti-dai sing-box websocket
       location /${UUID}-vmess {
         if (\$http_upgrade != "websocket") {
            return 404;
@@ -960,7 +956,7 @@ EOF
       }"
 
   NGINX_CONF+="
-      # 来自 /auto 的分流
+      # Diversion from /auto
       location ~ ^/${UUID}/auto {
         default_type 'text/plain; charset=utf-8';
         alias ${WORK_DIR}/subscribe/\$path;
@@ -977,7 +973,7 @@ EOF
 
   echo "$NGINX_CONF" > /etc/nginx/nginx.conf
 
-  # IPv6 时的 IP 处理
+# IP handling for IPv6
   if [[ "$SERVER_IP" =~ : ]]; then
     SERVER_IP_1="[$SERVER_IP]"
     SERVER_IP_2="[[$SERVER_IP]]"
@@ -986,8 +982,8 @@ EOF
     SERVER_IP_2="$SERVER_IP"
   fi
 
-  # 生成各订阅文件
-  # 生成 Clash proxy providers 订阅文件
+  # Generate each subscription file
+  # Generate Clash proxy providers subscription file
   local CLASH_SUBSCRIBE='proxies:'
 
   [ "${XTLS_REALITY}" = 'true' ] && local CLASH_XTLS_REALITY="- {name: \"${NODE_NAME} xtls-reality\", type: vless, server: ${SERVER_IP}, port: ${PORT_XTLS_REALITY}, uuid: ${UUID}, network: tcp, udp: true, tls: true, flow: xtls-rprx-vision, servername: addons.mozilla.org, client-fingerprint: firefox, reality-opts: {public-key: ${REALITY_PUBLIC}, short-id: \"\"}, smux: { enabled: false, protocol: 'h2mux', padding: false, max-connections: '8', min-streams: '16', statistic: true, only-tcp: false }, brutal-opts: { enabled: false } }" &&
@@ -1039,11 +1035,11 @@ EOF
 
   echo -n "${CLASH_SUBSCRIBE}" | sed -E '/^[ ]*#|^--/d' | sed '/^$/d' > ${WORK_DIR}/subscribe/proxies
 
-  # 生成 clash 订阅配置文件
-  # 模板: 使用 proxy providers
-  wget -qO- --tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/clash | sed "s#NODE_NAME#${NODE_NAME}#g; s#PROXY_PROVIDERS_URL#https://${ARGO_DOMAIN}/${UUID}/proxies#" > ${WORK_DIR}/subscribe/clash
+# Generate clash subscription configuration file
+  # Template: use proxy providers
+  wget -qO---tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/clash | sed "s#NODE_NAME#${NODE_NAME}#g; s#PROXY_PROVIDERS_URL#https://${ARGO_DOMAIN}/${UUID}/proxies#" > ${WORK_DIR}/subscribe/clash
 
-  # 生成 ShadowRocket 订阅配置文件
+  # Generate ShadowRocket subscription configuration file
   [ "${XTLS_REALITY}" = 'true' ] && local SHADOWROCKET_SUBSCRIBE+="
 vless://$(echo -n "auto:${UUID}@${SERVER_IP_2}:${PORT_XTLS_REALITY}" | base64 -w0)?remarks=${NODE_NAME// /%20}%20xtls-reality&obfs=none&tls=1&peer=addons.mozilla.org&xtls=2&pbk=${REALITY_PUBLIC}
 "
@@ -1082,7 +1078,7 @@ anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?peer=addons.mozilla.org&udp=1&hpk
 "
   echo -n "$SHADOWROCKET_SUBSCRIBE" | sed -E '/^[ ]*#|^--/d' | sed '/^$/d' | base64 -w0 > ${WORK_DIR}/subscribe/shadowrocket
 
-  # 生成 V2rayN 订阅文件
+# Generate V2rayN subscription file
   [ "${XTLS_REALITY}" = 'true' ] && local V2RAYN_SUBSCRIBE+="
 ----------------------------
 vless://${UUID}@${SERVER_IP_1}:${PORT_XTLS_REALITY}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=addons.mozilla.org&fp=firefox&pbk=${REALITY_PUBLIC}&type=tcp&headerType=none#${NODE_NAME// /%20}%20xtls-reality"
@@ -1176,7 +1172,7 @@ anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?security=tls&sni=addons.mozilla.o
 
   echo -n "$V2RAYN_SUBSCRIBE" | sed -E '/^[ ]*#|^[ ]+|^--|^\{|^\}/d' | sed '/^$/d' | base64 -w0 > ${WORK_DIR}/subscribe/v2rayn
 
-  # 生成 NekoBox 订阅文件
+# Generate NekoBox subscription file
   [ "${XTLS_REALITY}" = 'true' ] && local NEKOBOX_SUBSCRIBE+="
 ----------------------------
 vless://${UUID}@${SERVER_IP_1}:${PORT_XTLS_REALITY}?security=reality&sni=addons.mozilla.org&fp=firefox&pbk=${REALITY_PUBLIC}&type=tcp&flow=xtls-rprx-vision&encryption=none#${NODE_NAME// /%20}%20xtls-reality"
@@ -1227,7 +1223,7 @@ anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?security=tls&sni=addons.mozilla.o
 
   echo -n "$NEKOBOX_SUBSCRIBE" | sed -E '/^[ ]*#|^--/d' | sed '/^$/d' | base64 -w0 > ${WORK_DIR}/subscribe/neko
 
-  # 生成 Sing-box 订阅文件
+# Generate Sing-box subscription file
   [ "${XTLS_REALITY}" = 'true' ] &&
   local OUTBOUND_REPLACE+=" { \"type\": \"vless\", \"tag\": \"${NODE_NAME} xtls-reality\", \"server\":\"${SERVER_IP}\", \"server_port\":${PORT_XTLS_REALITY}, \"uuid\":\"${UUID}\", \"flow\":\"xtls-rprx-vision\", \"tls\":{ \"enabled\":true, \"server_name\":\"addons.mozilla.org\", \"utls\":{ \"enabled\":true, \"fingerprint\":\"firefox\" }, \"reality\":{ \"enabled\":true, \"public_key\":\"${REALITY_PUBLIC}\", \"short_id\":\"\" } }, \"multiplex\": { \"enabled\": false, \"protocol\": \"h2mux\", \"max_connections\": 8, \"min_streams\": 16, \"padding\": false, \"brutal\":{ \"enabled\":false } } }," &&
   local NODE_REPLACE+="\"${NODE_NAME} xtls-reality\","
@@ -1274,26 +1270,26 @@ anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?security=tls&sni=addons.mozilla.o
   local OUTBOUND_REPLACE+=" { \"type\": \"anytls\", \"tag\": \"${NODE_NAME} anytls\", \"server\": \"${SERVER_IP}\", \"server_port\": ${PORT_ANYTLS}, \"password\": \"${UUID}\", \"idle_session_check_interval\": \"30s\", \"idle_session_timeout\": \"30s\", \"min_idle_session\": 5, \"tls\": { \"enabled\": true, \"certificate_public_key_sha256\": [\"$SELF_SIGNED_FINGERPRINT_BASE64\"], \"server_name\": \"addons.mozilla.org\", \"utls\": { \"enabled\": true, \"fingerprint\": \"firefox\" } } }," &&
   local NODE_REPLACE+="\"${NODE_NAME} anytls\","
 
-  # 模板
-  local SING_BOX_JSON=$(wget -qO- --tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/sing-box)
+# template
+  local SING_BOX_JSON=$(wget -qO---tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/sing-box)
 
   echo $SING_BOX_JSON | sed "s#\"<OUTBOUND_REPLACE>\",#$OUTBOUND_REPLACE#; s#\"<NODE_REPLACE>\"#${NODE_REPLACE%,}#g" | ${WORK_DIR}/jq > ${WORK_DIR}/subscribe/sing-box
 
-  # 生成二维码 url 文件
+  # Generate QR code url file
   cat > ${WORK_DIR}/subscribe/qr << EOF
-自适应 Clash / V2rayN / NekoBox / ShadowRocket / SFI / SFA / SFM 客户端:
-模版:
+Adaptive Clash /V2rayN /NekoBox /ShadowRocket /SFI /SFA /SFM Client:
+Template:
 https://${ARGO_DOMAIN}/${UUID}/auto
 
-订阅 QRcode:
-模版:
+Subscribe QRcode:
+Template:
 https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://${ARGO_DOMAIN}/${UUID}/auto
 
-模版:
+Template:
 $(${WORK_DIR}/qrencode "https://${ARGO_DOMAIN}/${UUID}/auto")
 EOF
 
-  # 生成配置文件
+  # Generate configuration file
   EXPORT_LIST_FILE="*******************************************
 ┌────────────────┐
 │                │
@@ -1339,7 +1335,7 @@ $(hint "${NEKOBOX_SUBSCRIBE}")
 
 $(info "$(echo "{ \"outbounds\":[ ${OUTBOUND_REPLACE%,} ] }" | ${WORK_DIR}/jq)
 
-各客户端配置文件路径: ${WORK_DIR}/subscribe/\n 完整模板可参照:\n https://github.com/chika0801/sing-box-examples/tree/main/Tun")
+Each client configuration file path: ${WORK_DIR}/subscribe/\n You can refer to the complete template:\n https://github.com/chika0801/sing-box-examples/tree/main/Tun")
 "
 
 EXPORT_LIST_FILE+="
@@ -1352,47 +1348,46 @@ https://${ARGO_DOMAIN}/${UUID}/
 QR code:
 https://${ARGO_DOMAIN}/${UUID}/qr
 
-V2rayN 订阅:
+V2rayN Subscribe:
 https://${ARGO_DOMAIN}/${UUID}/v2rayn")
 
-$(hint "NekoBox 订阅:
+$(hint "NekoBox Subscription:
 https://${ARGO_DOMAIN}/${UUID}/neko")
 
-$(hint "Clash 订阅:
+$(hint "Clash Subscribe:
 https://${ARGO_DOMAIN}/${UUID}/clash
 
-sing-box 订阅:
+sing-box subscription:
 https://${ARGO_DOMAIN}/${UUID}/sing-box
 
-ShadowRocket 订阅:
+ShadowRocket Subscribe:
 https://${ARGO_DOMAIN}/${UUID}/shadowrocket")
 
 *******************************************
 
-$(info " 自适应 Clash / V2rayN / NekoBox / ShadowRocket / SFI / SFA / SFM 客户端:
-模版:
+$(info "Adaptive Clash /V2rayN /NekoBox /ShadowRocket /SFI /SFA /SFM Client:
+Template:
 https://${ARGO_DOMAIN}/${UUID}/auto
 
- 订阅 QRcode:
-模版:
+ Subscribe QRcode:
+Template:
 https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://${ARGO_DOMAIN}/${UUID}/auto")
 
-$(hint "模版:")
+$(hint "template:")
 $(${WORK_DIR}/qrencode https://${ARGO_DOMAIN}/${UUID}/auto)
 "
 
-  # 生成并显示节点信息
+# Generate and display node information
   echo "$EXPORT_LIST_FILE" > ${WORK_DIR}/list
   cat ${WORK_DIR}/list
 
-  # 显示脚本使用情况数据
-  hint "\n*******************************************\n"
-  local STAT=$(wget --no-check-certificate -qO- --timeout=3 "https://stat.cloudflare.now.cc/api/updateStats?script=sing-box-docker.sh")
+  # Display script usage data
+  hint "\n**********************************************\n"
+  local STAT=$(wget --no-check-certificate -qO---timeout=3 "https://stat.cloudflare.now.cc/api/updateStats?script=sing-box-docker.sh")
   [[ "$STAT" =~ \"todayCount\":([0-9]+),\"totalCount\":([0-9]+) ]] && local TODAY="${BASH_REMATCH[1]}" && local TOTAL="${BASH_REMATCH[2]}"
-  hint "\n 脚本当天运行次数: $TODAY，累计运行次数: $TOTAL \n"
+  hint "\n The number of times the script has been run on the day: $TODAY, the cumulative number of times it has been run: $TOTAL \n"
 }
-
-# Sing-box 的最新版本
+# Latest version of Sing-box
 update_sing-box() {
   local ONLINE=$(check_latest_sing-box)
   local LOCAL=$(${WORK_DIR}/sing-box version | awk '/version/{print $NF}')
@@ -1422,24 +1417,24 @@ update_sing-box() {
       info " Sing-box v${ONLINE} 已是最新版本！"
     fi
   else
-    warning " 获取不了在线版本，请稍后再试！"
+    warning " Не удалось получить онлайн-версию, повторите попытку позже!"
   fi
 }
 
-# 传参
+# Pass parameters
 while getopts ":Vv" OPTNAME; do
   case "${OPTNAME,,}" in
     v ) ACTION=update
   esac
 done
 
-# 主流程
+# Main process
 case "$ACTION" in
   update )
     update_sing-box
     ;;
   * )
     install
-    # 用 s6-overlay 作为 PID 1 承载守护
+    # Use s6-overlay as PID 1 bearer daemon
     exec /init
 esac
