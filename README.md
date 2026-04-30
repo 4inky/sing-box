@@ -4,26 +4,27 @@
 
 # Directory
 
--[1.Update information] (README.md#1 update information)
--[2. Project Features] (README.md#2 Project Features)
--[3.Sing-box for VPS run script] (README.md#3 sing-box-for-vps-run script)
--[4. Speedy installation without interaction] (README.md#4 Speedy installation without interaction)
--[5.Json Argo Tunnel Get (Recommended)] (README.md#5 json-argo-tunnel-Get-Recommended)
--[6.Token Argo Tunnel scheme sets any port back to the origin to use CDN] (README.md#6 token-argo-tunnel-scheme sets any port back to the origin to use -cdn)
--[7. Use Cloudflare API to automatically create Argo] (README.md#7 use-cloudflare-api-automatically create-argo)
--[8.Vmess /Vless scheme sets any port back to origin to use CDN] (README.md#8 vmess--vless-scheme sets any port back to origin to use -cdn)
--[9.Docker and Docker compose installation] (README.md#9 docker-and-docker-compose-installation)
--[10.Nekobox set shadowTLS method] (README.md#10 nekobox-set-shadowtls-method)
--[11. Main directory file and description] (README.md#11 main directory file and description)
--[12. Comparison of the processing methods of self-signed certificates in different clients] (README.md#12 Comparison of the processing methods of self-signed certificates in different clients)
--[13. Thanks to the following authors for their articles and projects] (README.md#13 Thanks to the following authors for their articles and projects)
--[14.Thanks to the sponsors] (README.md#14 Thanks to the sponsors)
--[15.Disclaimer] (README.md#15 Disclaimer)
--[16.Open source certificate] (README.md#16 open source certificate)
+- [1. Update information](#1-update-information)
+- [2. Project Features](#2-project-features)
+- [3. Sing-box for VPS run script](#3-sing-box-for-vps-run-script)
+- [4. Speedy installation without interaction](#4-speedy-installation-without-interaction)
+- [5. Json Argo Tunnel Get (Recommended)](#5-json-argo-tunnel-get-recommended)
+- [6. Token Argo Tunnel scheme sets any port back to the origin to use CDN](#6-token-argo-tunnel-scheme-sets-any-port-back-to-the-origin-to-use-cdn)
+- [7. Use Cloudflare API to automatically create Argo](#7-use-cloudflare-api-to-automatically-create-argo)
+- [8. Vmess /Vless scheme sets any port back to origin to use CDN](#8-vmess-vless-scheme-sets-any-port-back-to-origin-to-use-cdn)
+- [9. Docker and Docker compose installation](#9-docker-and-docker-compose-installation)
+- [10. Nekobox set shadowTLS method](#10-nekobox-set-shadowtls-method)
+- [11. Main directory file and description](#11-main-directory-file-and-description)
+- [12. Comparison of the processing methods of self-signed certificates in different clients](#12-comparison-of-the-processing-methods-of-self-signed-certificates-in-different-clients)
+- [13. Thanks to the following authors for their articles and projects](#13-thanks-to-the-following-authors-for-their-articles-and-projects)
+- [14. Thanks to the sponsors](#14-thanks-to-the-sponsors)
+- [15. Disclaimer](#15-disclaimer)
+- [16. Open source certificate](#16-open-source-certificate)
 
 
 * * *
-## 1.Update information
+
+## 1. Update information
 2026.04.25 v1.3.10 Added native protocol, but client support is extremely limited, with Shadowrocket offering the best compatibility. For the sing-box core, you must use the -glibc or -musl version according to the requirements; refer to the official documentation for details: https://sing-box.sagernet.org/configuration/outbound/naive/; Added native protocol, but client support is extremely limited, with Shadowrocket offering the best compatibility. Support is the best. The sing-box kernel needs to use the -glibc or -musl version according to the instructions. For details, see the official instructions https://sing-box.sagernet.org/zh/configuration/outbound/naive/
 2026.04.11 v1.3.9 1. remove pre-install UFW blocking logic, fallback to iptables when inactive; 2. avoid unnecessary sing-box restart for CDN /bandwidth /port hopping changes; 3. reduce redundant single-use functions; 3. Clean up single-call functions and improve the readability of the structure
 
@@ -132,7 +133,7 @@
 >2023.9.30 beta1 Sing-box one-click script for vps
 </details>
 
-## 2.Project features:
+## 2. Project Features
 
 *Deploy multiple protocols with one click, you can select single, multiple or all ShadowTLS v3 /XTLS Reality /Hysteria2 /Tuic V5 /ShadowSocks /Trojan /Vmess + ws /Vless + ws + tls /H2 Reality /gRPC Reality /AnyTLS /NaiveProxy, there is always one suitable for you
 *All protocols do not require domain names. Cloudflare Argo Tunnel intranet penetration is optional to support traditional websocket protocols.
@@ -143,7 +144,7 @@
 *Supported hardware structure types: AMD and ARM, support IPv4 and IPv6
 *Non-interactive fast arrangement mode: Complete the installation of 11 protocols with one press Enter
 
-## 3.Sing-box for VPS running script:
+## 3. Sing-box for VPS run script
 
 *first run
 ```
@@ -171,7 +172,7 @@ sb
   | -r              | Add and remove protocols  |
 
 
-## 4. Fast installation without interaction:
+## 4. Speedy installation without interaction
 ### Method 1. The fastest installation method: automatically supplement all parameters
 #### Chinese
 ```
@@ -384,7 +385,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 | --NODE_NAME_CONFIRM | Node name |
 
 
-## 5.Json Argo Tunnel acquisition (recommended)
+## 5. Json Argo Tunnel Get (Recommended)
 
 ### Users can easily obtain it through the Cloudflare Json generation network: https://fscarmen.cloudflare.now.cc
 
@@ -393,7 +394,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 If you want to do it manually, you can refer to, taking Debian as an example, the commands you need to use, [Deron Cheng -CloudFlare Argo Tunnel trial](https://zhengweidong.com/try-cloudflare-argo-tunnel)
 
 
-## 6.Token Argo Tunnel solution sets any port back to the origin to use CDN
+## 6. Token Argo Tunnel scheme sets any port back to the origin to use CDN
 Detailed tutorial: [Synology Suite: Cloudflare Tunnel intranet penetration Chinese tutorial supports DSM6 and 7](https://imnks.com/5984.html)
 
 <img width="1510" alt="image" src="https://github.com/fscarmen/sba/assets/62703343/bb2d9c43-3585-4abd-a35b-9cfd7404c87c">
@@ -414,7 +415,7 @@ Detailed tutorial: [Synology Suite: Cloudflare Tunnel intranet penetration Chine
 <img width="1336" height="691" alt="image" src="https://github.com/user-attachments/assets/e9c6d946-02ed-48fc-81c4-0fe374461eca" />
 
 
-## 8.Vmess /Vless scheme sets any port back to the origin to use CDN
+## 8. Vmess /Vless scheme sets any port back to the origin to use CDN
 For example IPv6: vmess [2a01:4f8:272:3ae6:100b:ee7a:ad2f:1]:10006
 <img width="1052" alt="image" src="https://github.com/fscarmen/sing-box/assets/62703343/bc2df37a-95c4-4ba0-9c84-5d9c745c3a7b">
 
@@ -425,7 +426,7 @@ For example IPv6: vmess [2a01:4f8:272:3ae6:100b:ee7a:ad2f:1]:10006
 <img width="1556" alt="image" src="https://github.com/fscarmen/sing-box/assets/62703343/164bf255-a6be-40bc-a724-56e13da7a1e6">
 
 
-## 9.Docker and Docker compose installation
+## 9. Docker and Docker compose installation
 
 ### Description:
 *Supports three Argo types of tunnels: temporary (no domain name required) /Json /Token
@@ -538,7 +539,7 @@ services:
 | -e ARGO_AUTH | no | Argo Authentication information, which can be yes Json, Token or Cloudflare API, can be effective when used together with ARGO_DOMAIN. If not specified, a temporary tunnel will be used. |
 
 
-## 10.Nekobox sets shadowTLS method
+## 10. Nekobox set shadowTLS method
 1. Copy the two Neko links output by the script into
 <img width="630" alt="image" src="https://github.com/fscarmen/sing-box/assets/62703343/db5960f3-63b1-4145-90a5-b01066dd39be">
 
@@ -550,7 +551,7 @@ After clicking "Select Configuration", give the node a name, select 1-tls-not-us
 <img width="408" alt="image" src="https://github.com/fscarmen/sing-box/assets/62703343/753e7159-92f9-4c88-91b5-867fdc8cca47">
 
 
-## 11. Main directory files and descriptions
+## 11. Main directory file and description
 
 ```
 /etc/sing-box/                               # Project main directory
@@ -605,7 +606,7 @@ After clicking "Select Configuration", give the node a name, select 1-tls-not-us
 ```
 
 
-## 12. Comparison of how self-signed certificates are processed in different clients
+## 12. Comparison of the processing methods of self-signed certificates in different clients
 
 | Client/Tool | Certificate verification method used | Whether the SNI must match the SAN | Whether to rely on the full certificate chain | Hash/fingerprint type used | SNI usage description |
 |---------------|---------------------|------------------------|------------------------|--------------------------|----------------------|
@@ -663,11 +664,11 @@ After clicking "Select Configuration", give the node a name, select 1-tls-not-us
 -Used for: **Sing-box**
 
 
-## 13. Thanks to the following authors for their articles and projects:
+## 13. Thanks to the following authors for their articles and projects
 Chika sing-box template: https://github.com/chika0801/sing-box-examples
 zmlu's Cloudflare Tunnel management script: https://raw.githubusercontent.com/zmlu/sba/main/tunnel.sh
 
-## 14.Thank you sponsors
+## 14. Thanks to the sponsors
 
 ### 🚀 Sponsored by SharonNetworks
 
@@ -704,11 +705,13 @@ Experience the speed, stability and security of VPS.Town, an all-in-one cloud co
 
 
 ## 15. Disclaimer
+
 *This program is for learning and understanding only. It is for non-profit purposes. Please delete it within 24 hours after downloading. It may not be used for any commercial purposes. The text, data and pictures are copyrighted. If reproduced, the source must be indicated.
 *Use of this program must comply with the deployment disclaimer. The use of this program must comply with the laws and regulations of the country where the server is deployed, the country where it is located, and the country where the user is located. The program author is not responsible for any inappropriate behavior by the user.
 
 
 ## 16. Open source certificate
+
 *This project strictly complies with the GNU GPL v3 License [LICENSE](LICENSE).
 *Any form of copying, distribution, modification or derivative use must completely retain the original copyright statement and license text, and be open source and released under the same license. Violation of this clause (such as closed source use, commercial exclusivity or non-open source modified version) will be regarded as plagiarism, and the author reserves the right to pursue legal liability.
 *Community contributions are encouraged, but please submit via Pull Request.
